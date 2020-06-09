@@ -15,10 +15,11 @@ When it is time to save your work, Prose gives you the ability download your doc
 #### How Do I Run This?
 Easy! You will need a few things.
 1. Install `rust` from the [rust-lang](https://www.rust-lang.org/tools/install) site.
-2. Install `wasm-pack` which is a crate from cargo. Just run `cargo install wasm-pack`.
-3. Install `npm` from the [npm](https://www.npmjs.com/get-npm) site.
-4. Run `npm run serve` in the `www` directory.
-5. Navigate to `https://localhost:8080` in your browser!
+1. Install `wasm-pack` which is a crate from cargo. Just run `cargo install wasm-pack`.
+1. Run `wasm-pack build` to compile all of of the code into a wasm npm package.
+1. Install `npm` from the [npm](https://www.npmjs.com/get-npm) site.
+1. Run `npm run serve` in the `www` directory.
+1. Navigate to `https://localhost:8080` in your browser!
 
 #### Support
 ###### Prose supports the following markdown structures:
