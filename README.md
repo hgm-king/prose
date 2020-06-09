@@ -1,4 +1,4 @@
-# 🎭 **Prose**
+# 🎭 Prose
 ###### **Turning your markdown into lovely HTML!**
 Prose is here to let you draft up a document and watch it render in real time.
 
