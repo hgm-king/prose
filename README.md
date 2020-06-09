@@ -23,15 +23,15 @@ Easy! You will need a few things.
 
 #### Support
 ###### Prose supports the following markdown structures:
-1. Headers 1-6
-1. Ordered Lists
-1. Unordered Lists
-1. Codeblocks (no specified language support)
-1. **boldtext**
-1. *italic text*
-1. `inline_code`
-1. Links
-1. Images
+- Headers 1-6
+- Ordered Lists
+- Unordered Lists
+- Codeblocks (no specified language support)
+- **boldtext**
+- *italic text*
+- `inline_code`
+- Links
+- Images
 
 You may be asking: *What makes this better than any other markdown parser?*
 Well, this is implemented in a very performant systems programming language and is much much faster.
