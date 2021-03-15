@@ -1,6 +1,8 @@
 pub mod parser;
 pub mod translator;
 
+use wasm_bindgen::prelude::*;
+
 pub type MarkdownText = Vec<MarkdownInline>;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -22,6 +24,7 @@ pub enum MarkdownInline {
     Plaintext(String),
 }
 
+#[wasm_bindgen]
 pub fn markdown(md: &str) -> String {
     match parser::parse_markdown(md) {
         Ok((_, m)) => translator::translate(m),
