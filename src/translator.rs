@@ -60,7 +60,7 @@ fn translate_code(code: MarkdownText) -> String {
 }
 
 fn translate_codeblock(code: String) -> String {
-    format!("<code><pre>{}</pre></code>", code)
+    format!("<pre><code>{}</code></pre>", code)
 }
 
 fn translate_line(text: MarkdownText) -> String {
@@ -202,7 +202,7 @@ mod tests {
     fn test_translate_codeblock() {
         assert_eq!(
 			translate_codeblock(String::from("python\nimport foobar\n\nfoobar.pluralize(\'word\') # returns \'words\'\nfoobar.pluralize(\'goose\') # returns \'geese\'\nfoobar.singularize(\'phenomena\') # returns \'phenomenon\'\n")),
-			String::from("<code><pre>python\nimport foobar\n\nfoobar.pluralize(\'word\') # returns \'words\'\nfoobar.pluralize(\'goose\') # returns \'geese\'\nfoobar.singularize(\'phenomena\') # returns \'phenomenon\'\n</pre></code>")
+			String::from("<pre><code>python\nimport foobar\n\nfoobar.pluralize(\'word\') # returns \'words\'\nfoobar.pluralize(\'goose\') # returns \'geese\'\nfoobar.singularize(\'phenomena\') # returns \'phenomenon\'\n</code></pre>")
 		);
     }
 
