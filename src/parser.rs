@@ -5,7 +5,7 @@ use crate::MarkdownText;
 use nom::{
     branch::alt,
     bytes::complete::{is_not, tag, take, take_while1},
-    character::{is_alphanumeric, is_digit},
+    character::is_digit,
     combinator::{map, not},
     multi::{many0, many1},
     sequence::{delimited, pair, preceded, terminated, tuple},
@@ -139,7 +139,10 @@ fn parse_code_block_body(i: &str) -> IResult<&str, &str> {
 }
 
 fn parse_code_block_lang(i: &str) -> IResult<&str, String> {
-    preceded(tag("```"), parse_plaintext)(i)
+    alt((
+        preceded(tag("```"), parse_plaintext),
+        map(tag("```"), |_| "".to_string()),
+    ))(i)
 }
 
 #[cfg(test)]
@@ -953,6 +956,25 @@ foobar.singularize('phenomena') # returns 'phenomenon'
         // 	parse_code_block("```bash\n pip `install` foobar\n```"),
         // 	Ok(("", "bash\n pip `install` foobar\n"))
         // );
+    }
+
+    #[test]
+    fn test_parse_codeblock_no_language() {
+        assert_eq!(
+            parse_code_block(
+                r#"```
+pip install foobar
+```"#
+            ),
+            Ok((
+                "",
+                (
+                    String::from(""),
+                    r#"pip install foobar
+"#
+                )
+            ))
+        );
     }
 
     #[test]
