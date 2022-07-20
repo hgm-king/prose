@@ -7,10 +7,8 @@ use nom::{
     bytes::complete::{is_not, tag, take, take_while1},
     character::is_digit,
     combinator::{map, not},
-    error::ErrorKind,
     multi::{many0, many1},
     sequence::{delimited, pair, preceded, terminated, tuple},
-    Err::Error,
     IResult,
 };
 
@@ -137,6 +135,7 @@ fn parse_code_block(i: &str) -> IResult<&str, &str> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use nom::{error::Error, error::ErrorKind, Err as NomErr};
 
     #[test]
     fn test_parse_italics() {
@@ -146,22 +145,53 @@ mod tests {
         );
         assert_eq!(
             parse_italics("*here is italic"),
-            Err(Error(("", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
         );
+
         assert_eq!(
             parse_italics("here is italic*"),
-            Err(Error(("here is italic*", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "here is italic*",
+                code: ErrorKind::Tag,
+            }))
         );
         assert_eq!(
             parse_italics("here is italic"),
-            Err(Error(("here is italic", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "here is italic",
+                code: ErrorKind::Tag
+            }))
         );
-        assert_eq!(parse_italics("*"), Err(Error(("", ErrorKind::IsNot))));
-        assert_eq!(parse_italics("**"), Err(Error(("*", ErrorKind::IsNot))));
-        assert_eq!(parse_italics(""), Err(Error(("", ErrorKind::Tag))));
+        assert_eq!(
+            parse_italics("*"),
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::IsNot
+            }))
+        );
+        assert_eq!(
+            parse_italics("**"),
+            Err(NomErr::Error(Error {
+                input: "*",
+                code: ErrorKind::IsNot
+            }))
+        );
+        assert_eq!(
+            parse_italics(""),
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
+        );
         assert_eq!(
             parse_italics("**we are doing bold**"),
-            Err(Error(("*we are doing bold**", ErrorKind::IsNot)))
+            Err(NomErr::Error(Error {
+                input: "*we are doing bold**",
+                code: ErrorKind::IsNot
+            }))
         );
     }
 
@@ -170,23 +200,59 @@ mod tests {
         assert_eq!(parse_boldtext("**here is bold**"), Ok(("", "here is bold")));
         assert_eq!(
             parse_boldtext("**here is bold"),
-            Err(Error(("", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
         );
         assert_eq!(
             parse_boldtext("here is bold**"),
-            Err(Error(("here is bold**", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "here is bold**",
+                code: ErrorKind::Tag
+            }))
         );
         assert_eq!(
             parse_boldtext("here is bold"),
-            Err(Error(("here is bold", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "here is bold",
+                code: ErrorKind::Tag
+            }))
         );
-        assert_eq!(parse_boldtext("****"), Err(Error(("**", ErrorKind::IsNot))));
-        assert_eq!(parse_boldtext("**"), Err(Error(("", ErrorKind::IsNot))));
-        assert_eq!(parse_boldtext("*"), Err(Error(("*", ErrorKind::Tag))));
-        assert_eq!(parse_boldtext(""), Err(Error(("", ErrorKind::Tag))));
+        assert_eq!(
+            parse_boldtext("****"),
+            Err(NomErr::Error(Error {
+                input: "**",
+                code: ErrorKind::IsNot
+            }))
+        );
+        assert_eq!(
+            parse_boldtext("**"),
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::IsNot
+            }))
+        );
+        assert_eq!(
+            parse_boldtext("*"),
+            Err(NomErr::Error(Error {
+                input: "*",
+                code: ErrorKind::Tag
+            }))
+        );
+        assert_eq!(
+            parse_boldtext(""),
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
+        );
         assert_eq!(
             parse_boldtext("*this is italic*"),
-            Err(Error(("*this is italic*", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "*this is italic*",
+                code: ErrorKind::Tag
+            }))
         );
     }
 
@@ -198,15 +264,39 @@ mod tests {
         );
         assert_eq!(
             parse_inline_code("`here is code"),
-            Err(Error(("", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
         );
         assert_eq!(
             parse_inline_code("here is code`"),
-            Err(Error(("here is code`", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "here is code`",
+                code: ErrorKind::Tag
+            }))
         );
-        assert_eq!(parse_inline_code("``"), Err(Error(("`", ErrorKind::IsNot))));
-        assert_eq!(parse_inline_code("`"), Err(Error(("", ErrorKind::IsNot))));
-        assert_eq!(parse_inline_code(""), Err(Error(("", ErrorKind::Tag))));
+        assert_eq!(
+            parse_inline_code("``"),
+            Err(NomErr::Error(Error {
+                input: "`",
+                code: ErrorKind::IsNot
+            }))
+        );
+        assert_eq!(
+            parse_inline_code("`"),
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::IsNot
+            }))
+        );
+        assert_eq!(
+            parse_inline_code(""),
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
+        );
     }
 
     #[test]
@@ -215,7 +305,13 @@ mod tests {
             parse_link("[title](https://www.example.com)"),
             Ok(("", ("title", "https://www.example.com")))
         );
-        assert_eq!(parse_inline_code(""), Err(Error(("", ErrorKind::Tag))));
+        assert_eq!(
+            parse_inline_code(""),
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
+        );
     }
 
     #[test]
@@ -224,7 +320,13 @@ mod tests {
             parse_image("![alt text](image.jpg)"),
             Ok(("", ("alt text", "image.jpg")))
         );
-        assert_eq!(parse_inline_code(""), Err(Error(("", ErrorKind::Tag))));
+        assert_eq!(
+            parse_inline_code(""),
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
+        );
     }
 
     #[test]
@@ -247,19 +349,31 @@ mod tests {
         );
         assert_eq!(
             parse_plaintext("*bold babey bold*"),
-            Err(Error(("*bold babey bold*", ErrorKind::Not)))
+            Err(NomErr::Error(Error {
+                input: "*bold babey bold*",
+                code: ErrorKind::Not
+            }))
         );
         assert_eq!(
             parse_plaintext("[link babey](and then somewhat)"),
-            Err(Error(("[link babey](and then somewhat)", ErrorKind::Not)))
+            Err(NomErr::Error(Error {
+                input: "[link babey](and then somewhat)",
+                code: ErrorKind::Not
+            }))
         );
         assert_eq!(
             parse_plaintext("`codeblock for bums`"),
-            Err(Error(("`codeblock for bums`", ErrorKind::Not)))
+            Err(NomErr::Error(Error {
+                input: "`codeblock for bums`",
+                code: ErrorKind::Not
+            }))
         );
         assert_eq!(
             parse_plaintext("![ but wait theres more](jk)"),
-            Err(Error(("![ but wait theres more](jk)", ErrorKind::Not)))
+            Err(NomErr::Error(Error {
+                input: "![ but wait theres more](jk)",
+                code: ErrorKind::Not
+            }))
         );
         assert_eq!(
             parse_plaintext("here is plaintext"),
@@ -279,25 +393,46 @@ mod tests {
         );
         assert_eq!(
             parse_plaintext("*here is italic*"),
-            Err(Error(("*here is italic*", ErrorKind::Not)))
+            Err(NomErr::Error(Error {
+                input: "*here is italic*",
+                code: ErrorKind::Not
+            }))
         );
         assert_eq!(
             parse_plaintext("**here is bold**"),
-            Err(Error(("**here is bold**", ErrorKind::Not)))
+            Err(NomErr::Error(Error {
+                input: "**here is bold**",
+                code: ErrorKind::Not
+            }))
         );
         assert_eq!(
             parse_plaintext("`here is code`"),
-            Err(Error(("`here is code`", ErrorKind::Not)))
+            Err(NomErr::Error(Error {
+                input: "`here is code`",
+                code: ErrorKind::Not
+            }))
         );
         assert_eq!(
             parse_plaintext("[title](https://www.example.com)"),
-            Err(Error(("[title](https://www.example.com)", ErrorKind::Not)))
+            Err(NomErr::Error(Error {
+                input: "[title](https://www.example.com)",
+                code: ErrorKind::Not
+            }))
         );
         assert_eq!(
             parse_plaintext("![alt text](image.jpg)"),
-            Err(Error(("![alt text](image.jpg)", ErrorKind::Not)))
+            Err(NomErr::Error(Error {
+                input: "![alt text](image.jpg)",
+                code: ErrorKind::Not
+            }))
         );
-        assert_eq!(parse_plaintext(""), Err(Error(("", ErrorKind::Eof))));
+        assert_eq!(
+            parse_plaintext(""),
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Eof
+            }))
+        );
     }
 
     #[test]
@@ -354,9 +489,18 @@ mod tests {
         );
         assert_eq!(
             parse_markdown_inline("\n"),
-            Err(Error(("\n", ErrorKind::Not)))
+            Err(NomErr::Error(Error {
+                input: "\n",
+                code: ErrorKind::Not
+            }))
         );
-        assert_eq!(parse_markdown_inline(""), Err(Error(("", ErrorKind::Eof))));
+        assert_eq!(
+            parse_markdown_inline(""),
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Eof
+            }))
+        );
     }
 
     #[test]
@@ -404,7 +548,10 @@ mod tests {
         );
         assert_eq!(
             parse_markdown_text("here is some plaintext *but what if we italicize?"),
-            Err(Error(("*but what if we italicize?", ErrorKind::Tag))) // Ok(("*but what if we italicize?", vec![MarkdownInline::Plaintext(String::from("here is some plaintext "))]))
+            Err(NomErr::Error(Error {
+                input: "*but what if we italicize?",
+                code: ErrorKind::Tag
+            })) // Ok(("*but what if we italicize?", vec![MarkdownInline::Plaintext(String::from("here is some plaintext "))]))
         );
     }
 
@@ -416,9 +563,18 @@ mod tests {
         assert_eq!(parse_header_tag("# h1"), Ok(("h1", 1)));
         assert_eq!(
             parse_header_tag(" "),
-            Err(Error((" ", ErrorKind::TakeWhile1)))
+            Err(NomErr::Error(Error {
+                input: " ",
+                code: ErrorKind::TakeWhile1
+            }))
         );
-        assert_eq!(parse_header_tag("#"), Err(Error(("", ErrorKind::Tag))));
+        assert_eq!(
+            parse_header_tag("#"),
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
+        );
     }
 
     #[test]
@@ -438,12 +594,42 @@ mod tests {
                 (3, vec![MarkdownInline::Plaintext(String::from(" h3"))])
             ))
         );
-        assert_eq!(parse_header("###h3"), Err(Error(("h3", ErrorKind::Tag))));
-        assert_eq!(parse_header("###"), Err(Error(("", ErrorKind::Tag))));
-        assert_eq!(parse_header(""), Err(Error(("", ErrorKind::TakeWhile1))));
-        assert_eq!(parse_header("#"), Err(Error(("", ErrorKind::Tag))));
+        assert_eq!(
+            parse_header("###h3"),
+            Err(NomErr::Error(Error {
+                input: "h3",
+                code: ErrorKind::Tag
+            }))
+        );
+        assert_eq!(
+            parse_header("###"),
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
+        );
+        assert_eq!(
+            parse_header(""),
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::TakeWhile1
+            }))
+        );
+        assert_eq!(
+            parse_header("#"),
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
+        );
         assert_eq!(parse_header("# \n"), Ok(("", (1, vec![]))));
-        assert_eq!(parse_header("# test"), Err(Error(("", ErrorKind::Tag))));
+        assert_eq!(
+            parse_header("# test"),
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
+        );
     }
 
     #[test]
@@ -455,19 +641,31 @@ mod tests {
         );
         assert_eq!(
             parse_unordered_list_tag("-"),
-            Err(Error(("", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
         );
         assert_eq!(
             parse_unordered_list_tag("-and some more"),
-            Err(Error(("and some more", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "and some more",
+                code: ErrorKind::Tag
+            }))
         );
         assert_eq!(
             parse_unordered_list_tag("--"),
-            Err(Error(("-", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "-",
+                code: ErrorKind::Tag
+            }))
         );
         assert_eq!(
             parse_unordered_list_tag(""),
-            Err(Error(("", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
         );
     }
 
@@ -493,20 +691,32 @@ mod tests {
         );
         assert_eq!(
             parse_unordered_list_element(""),
-            Err(Error(("", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
         );
         assert_eq!(parse_unordered_list_element("- \n"), Ok(("", vec![])));
         assert_eq!(
             parse_unordered_list_element("- "),
-            Err(Error(("", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
         );
         assert_eq!(
             parse_unordered_list_element("- test"),
-            Err(Error(("", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
         );
         assert_eq!(
             parse_unordered_list_element("-"),
-            Err(Error(("", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
         );
     }
 
@@ -514,7 +724,10 @@ mod tests {
     fn test_parse_unordered_list() {
         assert_eq!(
             parse_unordered_list("- this is an element"),
-            Err(Error(("", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
         );
         assert_eq!(
             parse_unordered_list("- this is an element\n"),
@@ -549,19 +762,31 @@ mod tests {
         );
         assert_eq!(
             parse_ordered_list_tag("1"),
-            Err(Error(("", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
         );
         assert_eq!(
             parse_ordered_list_tag("1.and some more"),
-            Err(Error(("and some more", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "and some more",
+                code: ErrorKind::Tag
+            }))
         );
         assert_eq!(
             parse_ordered_list_tag("1111."),
-            Err(Error(("", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
         );
         assert_eq!(
             parse_ordered_list_tag(""),
-            Err(Error(("", ErrorKind::TakeWhile1)))
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::TakeWhile1
+            }))
         );
     }
 
@@ -587,24 +812,39 @@ mod tests {
         );
         assert_eq!(
             parse_ordered_list_element(""),
-            Err(Error(("", ErrorKind::TakeWhile1)))
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::TakeWhile1
+            }))
         );
         assert_eq!(
             parse_ordered_list_element(""),
-            Err(Error(("", ErrorKind::TakeWhile1)))
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::TakeWhile1
+            }))
         );
         assert_eq!(parse_ordered_list_element("1. \n"), Ok(("", vec![])));
         assert_eq!(
             parse_ordered_list_element("1. test"),
-            Err(Error(("", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
         );
         assert_eq!(
             parse_ordered_list_element("1. "),
-            Err(Error(("", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
         );
         assert_eq!(
             parse_ordered_list_element("1."),
-            Err(Error(("", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
         );
     }
 
@@ -621,7 +861,10 @@ mod tests {
         );
         assert_eq!(
             parse_ordered_list("1. test"),
-            Err(Error(("", ErrorKind::Tag)))
+            Err(NomErr::Error(Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
         );
         assert_eq!(
             parse_ordered_list("1. this is an element\n2. here is another\n"),
