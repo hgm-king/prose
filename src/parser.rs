@@ -481,7 +481,10 @@ mod tests {
             ))
         );
         assert_eq!(
-            parse_markdown_inline("here is some plaintext \n*but what if we italicize?"),
+            parse_markdown_inline(
+                r#"here is some plaintext 
+*but what if we italicize?"#
+            ),
             Ok((
                 "\n*but what if we italicize?",
                 MarkdownInline::Plaintext(String::from("here is some plaintext "))
@@ -681,7 +684,11 @@ mod tests {
             ))
         );
         assert_eq!(
-            parse_unordered_list_element("- this is an element\n- this is another element\n"),
+            parse_unordered_list_element(
+                r#"- this is an element
+- this is another element
+"#
+            ),
             Ok((
                 "- this is another element\n",
                 vec![MarkdownInline::Plaintext(String::from(
@@ -739,7 +746,11 @@ mod tests {
             ))
         );
         assert_eq!(
-            parse_unordered_list("- this is an element\n- here is another\n"),
+            parse_unordered_list(
+                r#"- this is an element
+- here is another
+"#
+            ),
             Ok((
                 "",
                 vec![
@@ -802,7 +813,11 @@ mod tests {
             ))
         );
         assert_eq!(
-            parse_ordered_list_element("1. this is an element\n1. here is another\n"),
+            parse_ordered_list_element(
+                r#"1. this is an element
+1. here is another
+"#
+            ),
             Ok((
                 "1. here is another\n",
                 vec![MarkdownInline::Plaintext(String::from(
@@ -867,7 +882,11 @@ mod tests {
             }))
         );
         assert_eq!(
-            parse_ordered_list("1. this is an element\n2. here is another\n"),
+            parse_ordered_list(
+                r#"1. this is an element
+2. here is another
+"#
+            ),
             Ok((
                 "",
                 vec![
@@ -883,12 +902,38 @@ mod tests {
     #[test]
     fn test_parse_codeblock() {
         assert_eq!(
-            parse_code_block("```bash\n pip install foobar\n```"),
-            Ok(("", "bash\n pip install foobar\n"))
+            parse_code_block(
+                r#"```bash
+pip install foobar
+```"#
+            ),
+            Ok((
+                "",
+                r#"bash
+pip install foobar
+"#
+            ))
         );
         assert_eq!(
-            parse_code_block("```python\nimport foobar\n\nfoobar.pluralize('word') # returns 'words'\nfoobar.pluralize('goose') # returns 'geese'\nfoobar.singularize('phenomena') # returns 'phenomenon'\n```"),
-            Ok(("", "python\nimport foobar\n\nfoobar.pluralize('word') # returns 'words'\nfoobar.pluralize('goose') # returns 'geese'\nfoobar.singularize('phenomena') # returns 'phenomenon'\n"))
+            parse_code_block(
+                r#"```python
+import foobar
+
+foobar.pluralize('word') # returns 'words'
+foobar.pluralize('goose') # returns 'geese'
+foobar.singularize('phenomena') # returns 'phenomenon'
+```"#
+            ),
+            Ok((
+                "",
+                r#"python
+import foobar
+
+foobar.pluralize('word') # returns 'words'
+foobar.pluralize('goose') # returns 'geese'
+foobar.singularize('phenomena') # returns 'phenomenon'
+"#
+            ))
         );
         // assert_eq!(
         // 	parse_code_block("```bash\n pip `install` foobar\n```"),
@@ -899,13 +944,29 @@ mod tests {
     #[test]
     fn test_parse_markdown() {
         assert_eq!(
-            parse_markdown("# Foobar\n\nFoobar is a Python library for dealing with word pluralization.\n\n```bash\n pip install foobar\n```\n## Installation\n\nUse the package manager [pip](https://pip.pypa.io/en/stable/) to install foobar.\n```python\nimport foobar\n\nfoobar.pluralize('word') # returns 'words'\nfoobar.pluralize('goose') # returns 'geese'\nfoobar.singularize('phenomena') # returns 'phenomenon'\n```"),
+            parse_markdown(r#"# Foobar
+
+Foobar is a Python library for dealing with word pluralization.
+
+```bash
+pip install foobar
+```
+## Installation
+
+Use the package manager [pip](https://pip.pypa.io/en/stable/) to install foobar.
+```python
+import foobar
+
+foobar.pluralize('word') # returns 'words'
+foobar.pluralize('goose') # returns 'geese'
+foobar.singularize('phenomena') # returns 'phenomenon'
+```"#),
             Ok(("", vec![
                 Markdown::Heading(1, vec![MarkdownInline::Plaintext(String::from("Foobar"))]),
                 Markdown::Line(vec![]),
                 Markdown::Line(vec![MarkdownInline::Plaintext(String::from("Foobar is a Python library for dealing with word pluralization."))]),
                 Markdown::Line(vec![]),
-                Markdown::Codeblock(String::from("bash\n pip install foobar\n")),
+                Markdown::Codeblock(String::from("bash\npip install foobar\n")),
                 Markdown::Line(vec![]),
                 Markdown::Heading(2, vec![MarkdownInline::Plaintext(String::from("Installation"))]),
                 Markdown::Line(vec![]),
