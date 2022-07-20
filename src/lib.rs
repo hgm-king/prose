@@ -9,7 +9,7 @@ pub enum Markdown {
     OrderedList(Vec<MarkdownText>),
     UnorderedList(Vec<MarkdownText>),
     Line(MarkdownText),
-    Codeblock(String),
+    Codeblock(String, String),
 }
 
 #[derive(Clone, Debug, PartialEq)]

@@ -17,7 +17,9 @@ pub fn parse_markdown(i: &str) -> IResult<&str, Vec<Markdown>> {
         map(parse_header, |e| Markdown::Heading(e.0, e.1)),
         map(parse_unordered_list, |e| Markdown::UnorderedList(e)),
         map(parse_ordered_list, |e| Markdown::OrderedList(e)),
-        map(parse_code_block, |e| Markdown::Codeblock(e.to_string())),
+        map(parse_code_block, |e| {
+            Markdown::Codeblock(e.0.to_string(), e.1.to_string())
+        }),
         map(parse_markdown_text, |e| Markdown::Line(e)),
     )))(i)
 }
@@ -128,8 +130,16 @@ fn parse_ordered_list(i: &str) -> IResult<&str, Vec<MarkdownText>> {
     many1(parse_ordered_list_element)(i)
 }
 
-fn parse_code_block(i: &str) -> IResult<&str, &str> {
+fn parse_code_block(i: &str) -> IResult<&str, (&str, &str)> {
+    tuple((parse_code_block_lang, parse_code_block_body))(i)
+}
+
+fn parse_code_block_body(i: &str) -> IResult<&str, &str> {
     delimited(tag("```"), is_not("```"), tag("```"))(i)
+}
+
+fn parse_code_block_lang(i: &str) -> IResult<&str, &str> {
+    todo!();
 }
 
 #[cfg(test)]
@@ -909,9 +919,12 @@ pip install foobar
             ),
             Ok((
                 "",
-                r#"bash
+                (
+                    "bash",
+                    r#"
 pip install foobar
 "#
+                )
             ))
         );
         assert_eq!(
@@ -926,13 +939,15 @@ foobar.singularize('phenomena') # returns 'phenomenon'
             ),
             Ok((
                 "",
-                r#"python
-import foobar
+                (
+                    "python",
+                    r#"import foobar
 
 foobar.pluralize('word') # returns 'words'
 foobar.pluralize('goose') # returns 'geese'
 foobar.singularize('phenomena') # returns 'phenomenon'
 "#
+                )
             ))
         );
         // assert_eq!(
@@ -944,7 +959,8 @@ foobar.singularize('phenomena') # returns 'phenomenon'
     #[test]
     fn test_parse_markdown() {
         assert_eq!(
-            parse_markdown(r#"# Foobar
+            parse_markdown(
+                r#"# Foobar
 
 Foobar is a Python library for dealing with word pluralization.
 
@@ -960,23 +976,44 @@ import foobar
 foobar.pluralize('word') # returns 'words'
 foobar.pluralize('goose') # returns 'geese'
 foobar.singularize('phenomena') # returns 'phenomenon'
-```"#),
-            Ok(("", vec![
-                Markdown::Heading(1, vec![MarkdownInline::Plaintext(String::from("Foobar"))]),
-                Markdown::Line(vec![]),
-                Markdown::Line(vec![MarkdownInline::Plaintext(String::from("Foobar is a Python library for dealing with word pluralization."))]),
-                Markdown::Line(vec![]),
-                Markdown::Codeblock(String::from("bash\npip install foobar\n")),
-                Markdown::Line(vec![]),
-                Markdown::Heading(2, vec![MarkdownInline::Plaintext(String::from("Installation"))]),
-                Markdown::Line(vec![]),
-                Markdown::Line(vec![
-                    MarkdownInline::Plaintext(String::from("Use the package manager ")),
-                    MarkdownInline::Link(String::from("pip"), String::from("https://pip.pypa.io/en/stable/")),
-                    MarkdownInline::Plaintext(String::from(" to install foobar.")),
-                ]),
-                Markdown::Codeblock(String::from("python\nimport foobar\n\nfoobar.pluralize('word') # returns 'words'\nfoobar.pluralize('goose') # returns 'geese'\nfoobar.singularize('phenomena') # returns 'phenomenon'\n")),
-            ]))
+```"#
+            ),
+            Ok((
+                "",
+                vec![
+                    Markdown::Heading(1, vec![MarkdownInline::Plaintext(String::from("Foobar"))]),
+                    Markdown::Line(vec![]),
+                    Markdown::Line(vec![MarkdownInline::Plaintext(String::from(
+                        "Foobar is a Python library for dealing with word pluralization."
+                    ))]),
+                    Markdown::Line(vec![]),
+                    Markdown::Codeblock(String::from("bash"), String::from("pip install foobar\n")),
+                    Markdown::Line(vec![]),
+                    Markdown::Heading(
+                        2,
+                        vec![MarkdownInline::Plaintext(String::from("Installation"))]
+                    ),
+                    Markdown::Line(vec![]),
+                    Markdown::Line(vec![
+                        MarkdownInline::Plaintext(String::from("Use the package manager ")),
+                        MarkdownInline::Link(
+                            String::from("pip"),
+                            String::from("https://pip.pypa.io/en/stable/")
+                        ),
+                        MarkdownInline::Plaintext(String::from(" to install foobar.")),
+                    ]),
+                    Markdown::Codeblock(
+                        String::from("python"),
+                        String::from(
+                            r#"import foobar
+foobar.pluralize('word') # returns 'words'
+foobar.pluralize('goose') # returns 'geese'
+foobar.singularize('phenomena') # returns 'phenomenon'
+"#
+                        )
+                    ),
+                ]
+            ))
         )
     }
 }
