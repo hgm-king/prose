@@ -5,7 +5,7 @@ use crate::MarkdownText;
 use nom::{
     branch::alt,
     bytes::complete::{is_not, tag, take, take_while1},
-    character::is_digit,
+    character::{is_alphanumeric, is_digit},
     combinator::{map, not},
     multi::{many0, many1},
     sequence::{delimited, pair, preceded, terminated, tuple},
@@ -130,16 +130,16 @@ fn parse_ordered_list(i: &str) -> IResult<&str, Vec<MarkdownText>> {
     many1(parse_ordered_list_element)(i)
 }
 
-fn parse_code_block(i: &str) -> IResult<&str, (&str, &str)> {
+fn parse_code_block(i: &str) -> IResult<&str, (String, &str)> {
     tuple((parse_code_block_lang, parse_code_block_body))(i)
 }
 
 fn parse_code_block_body(i: &str) -> IResult<&str, &str> {
-    delimited(tag("```"), is_not("```"), tag("```"))(i)
+    delimited(tag("\n"), is_not("```"), tag("```"))(i)
 }
 
-fn parse_code_block_lang(i: &str) -> IResult<&str, &str> {
-    todo!();
+fn parse_code_block_lang(i: &str) -> IResult<&str, String> {
+    preceded(tag("```"), parse_plaintext)(i)
 }
 
 #[cfg(test)]
@@ -920,9 +920,8 @@ pip install foobar
             Ok((
                 "",
                 (
-                    "bash",
-                    r#"
-pip install foobar
+                    String::from("bash"),
+                    r#"pip install foobar
 "#
                 )
             ))
@@ -940,7 +939,7 @@ foobar.singularize('phenomena') # returns 'phenomenon'
             Ok((
                 "",
                 (
-                    "python",
+                    String::from("python"),
                     r#"import foobar
 
 foobar.pluralize('word') # returns 'words'
@@ -1006,6 +1005,7 @@ foobar.singularize('phenomena') # returns 'phenomenon'
                         String::from("python"),
                         String::from(
                             r#"import foobar
+
 foobar.pluralize('word') # returns 'words'
 foobar.pluralize('goose') # returns 'geese'
 foobar.singularize('phenomena') # returns 'phenomenon'
