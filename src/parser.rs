@@ -141,7 +141,7 @@ fn parse_code_block_body(i: &str) -> IResult<&str, &str> {
 fn parse_code_block_lang(i: &str) -> IResult<&str, String> {
     alt((
         preceded(tag("```"), parse_plaintext),
-        map(tag("```"), |_| "".to_string()),
+        map(tag("```"), |_| "__UNKNOWN__".to_string()),
     ))(i)
 }
 
@@ -969,7 +969,7 @@ pip install foobar
             Ok((
                 "",
                 (
-                    String::from(""),
+                    String::from("__UNKNOWN__"),
                     r#"pip install foobar
 "#
                 )
