@@ -1,6 +1,6 @@
 [package]
 name = "markdown-to-html"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["HG King <hgmaxwellking@gmail.com>"]
 description = "Markdown parser that runs at hyper speeds!"
 license = "MIT/Apache-2.0"
